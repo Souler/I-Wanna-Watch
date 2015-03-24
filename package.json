@@ -1,0 +1,19 @@
+{
+  "name": "IWannaWatch",
+  "version": "0.0.0",
+  "description": "",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "request": "~2.53.0",
+    "request-promise": "~0.4.1",
+    "cheerio": "~0.19.0",
+    "async": "~0.9.0",
+    "glob": "~5.0.3",
+    "request-progress": "~0.3.1"
+  }
+}
