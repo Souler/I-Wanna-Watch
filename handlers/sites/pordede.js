@@ -30,7 +30,7 @@ var headers = {
 
 var jar = request.jar();
 
-var login = function(cb) {
+var login = function(params, cb) {
     var options = {
         method: 'POST',
         uri: URLs.LOGIN,
@@ -39,8 +39,8 @@ var login = function(cb) {
     };
 
     options.form = {
-        'LoginForm[username]': 'username',
-        'LoginForm[password]': 'password',
+        'LoginForm[username]': params.username,
+        'LoginForm[password]': params.password,
         'popup': '1',
     };
 

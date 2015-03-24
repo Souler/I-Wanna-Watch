@@ -1,11 +1,14 @@
 
 var async = require('async');
+var config = require('./config.js');
 
 var VideoHandler = require('./handlers/video');
 //var SiteHandler = require('./handlers/sites');
 var pordede = require('./handlers/sites/pordede');
 async.series([
-    pordede.login,
+    function(cb) {
+        pordede.login(config.accounts['pordede.com'], cb);
+    },
     function(cb) {
         pordede.search('better call saul', cb);
     }

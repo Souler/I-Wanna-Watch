@@ -1,0 +1,11 @@
+/**
+    Fullfill this file with your data and rename it to config.js
+*/
+module.exports = {
+    accounts: {
+        "pordede.com": {
+            username: "username",
+            password: "password"
+        }
+    }
+}
