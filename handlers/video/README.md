@@ -8,9 +8,9 @@ Every video site handler should have at least this properties among their export
 Use this as a quick bootstrap when creating new video sites scripts
 ```javascript
 /**
-	SOME SITE handler
+    SOME SITE handler
 
-	TODO: Description of the process on a web browser.
+    TODO: Description of the process on a web browser.
 */
 var handles = [
     /* Hostnames handled by this module */
@@ -31,7 +31,7 @@ var handler = function(uri, cb) {
 }
 
 module.exports = {
-	handles: handles,
-	handler: handler
+    handles: handles,
+    handler: handler
 };
 ```
