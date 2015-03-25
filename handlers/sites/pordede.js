@@ -14,7 +14,7 @@ var URLs = {
     LOGIN: 'http://www.pordede.com/site/login',
     SEARCH: 'http://www.pordede.com/series/search/query/%s/on/title/showlist/all',
     TV_SHOW: 'http://www.pordede.com/serie/%s',
-    EPISODE: '/links/viewepisode/id/%d'
+    EPISODE: 'http://www.pordede.com/links/viewepisode/id/%d'
 }
 
 var Errors = {
@@ -83,7 +83,7 @@ var search = function(query, cb) {
             var link = $this.find('a.defaultLink').attr('href');
             var thumbnail = $this.find('div.coverMini img.centeredPic').attr('src');
 
-            var id = title.split('/').pop();
+            var id = link.split('/').pop();
             return {
                 id: id,
                 title: title,
@@ -96,9 +96,8 @@ var search = function(query, cb) {
 
 }
 
-var show = function(id, cb) {
-    // WIP
-    var uri = util.format(URLs.TV_SHOW, id);
+var show = function(showId, cb) {
+    var uri = util.format(URLs.TV_SHOW, showId);
 
     var options = {
         method: 'GET',
@@ -109,11 +108,47 @@ var show = function(id, cb) {
     };
 
     request(options, function (err, response, body) {
+        if (err)
+            return cb(err);
+
+        body = JSON.parse(body);
+        var $ = cheerio.load(body.html);
+        var seasons = $('div.episodes').map(function() {
+            var $this = $(this);
+            var season = $this.find('div.checkSeason').children().first()[0].prev.data; // BLACK MAGIC!
+            var episodes = $('div[data-model="episode"]');
+
+            episodes = episodes.map(function() {
+                var $episode = $(this);
+                var episodeId = $episode.attr('data-id');
+                var numberDOM = $episode.find('div.info span.title span.number');
+                var number = Number(numberDOM.html());
+                var title = numberDOM[0].next.data;
+
+                return {
+                    id: episodeId,
+                    number: number,
+                    title: title
+                }
+            }).get();
+
+            return {
+                name: season,
+                episodes: episodes
+            }
+        }).get();
+
+        cb(null, seasons);
     });
 
 }
 
+var episode = function(id, cb) {
+    linksContainer online
+}
+
 module.exports = {
     login: login,
-    search: search
+    search: search,
+    show: show
 }

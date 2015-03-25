@@ -5,12 +5,18 @@ var config = require('./config.js');
 var VideoHandler = require('./handlers/video');
 //var SiteHandler = require('./handlers/sites');
 var pordede = require('./handlers/sites/pordede');
-async.series([
+async.waterfall([
     function(cb) {
         pordede.login(config.accounts['pordede.com'], cb);
     },
     function(cb) {
         pordede.search('better call saul', cb);
+    },
+    function(shows, cb) {
+        pordede.show(shows[0].id, cb);
+    },
+    function(seasons, cb) {
+        console.log(JSON.stringify(seasons, null, 2));
     }
 ], console.log);
 
