@@ -14,8 +14,10 @@ var URLs = {
     LOGIN: 'http://www.pordede.com/site/login',
     SEARCH: 'http://www.pordede.com/series/search/query/%s/on/title/showlist/all',
     TV_SHOW: 'http://www.pordede.com/serie/%s',
-    EPISODE: 'http://www.pordede.com/links/viewepisode/id/%d'
-}
+    EPISODE: 'http://www.pordede.com/links/viewepisode/id/%d',
+    LINK: 'http://www.pordede.com/aporte/%s',
+    GOTO: 'http://www.pordede.com/links/goto/%s'
+};
 
 var Errors = {
     WRONG_LOGIN: 'Incorrect login',
@@ -30,13 +32,18 @@ var headers = {
 
 var jar = request.jar();
 
-var login = function(params, cb) {
-    var options = {
-        method: 'POST',
-        uri: URLs.LOGIN,
+var getOptions = function(method, uri) {
+    return {
+        method: method.toUpperCase(),
+        uri: uri,
         jar: jar,
-        headers: headers
+        headers: headers,
+        followRedirect: false
     };
+}
+
+var login = function(params, cb) {
+    var options = getOptions('POST', URLs.LOGIN);
 
     options.form = {
         'LoginForm[username]': params.username,
@@ -59,14 +66,7 @@ var login = function(params, cb) {
 var search = function(query, cb) {
     var q = querystring.escape(query);
     var searchUri = util.format(URLs.SEARCH, q);
-
-    var options = {
-        method: 'GET',
-        uri: searchUri,
-        jar: jar,
-        headers: headers,
-        followRedirect: false
-    };
+    var options = getOptions('GET', searchUri);
 
     request(options, function (err, response, body) {
         if (err)
@@ -98,25 +98,21 @@ var search = function(query, cb) {
 
 var show = function(showId, cb) {
     var uri = util.format(URLs.TV_SHOW, showId);
-
-    var options = {
-        method: 'GET',
-        uri: uri,
-        jar: jar,
-        headers: headers,
-        followRedirect: false
-    };
+    var options = getOptions('GET', uri);
 
     request(options, function (err, response, body) {
         if (err)
             return cb(err);
+
+        if (response.statusCode == 302) // We are not logged in
+            return cb(Errors.NOT_LOGGED_IN);
 
         body = JSON.parse(body);
         var $ = cheerio.load(body.html);
         var seasons = $('div.episodes').map(function() {
             var $this = $(this);
             var season = $this.find('div.checkSeason').children().first()[0].prev.data; // BLACK MAGIC!
-            var episodes = $('div[data-model="episode"]');
+            var episodes = $this.find('div[data-model="episode"]');
 
             episodes = episodes.map(function() {
                 var $episode = $(this);
@@ -143,12 +139,77 @@ var show = function(showId, cb) {
 
 }
 
-var episode = function(id, cb) {
-    linksContainer online
+var episode = function(episodeId, cb) {
+
+    var uri = util.format(URLs.EPISODE, episodeId);
+    var options = getOptions('GET', uri);
+
+    async.waterfall([
+        function getEpisodeLinksIds(_cb) {
+            request(options, function (err, response, body) {
+                if (err)
+                    return _cb(err);
+
+                if (response.statusCode == 302) // We are not logged in
+                    return _cb(Errors.NOT_LOGGED_IN);
+
+                body = JSON.parse(body);
+                var $ = cheerio.load(body.html);
+                var links = $('div.linksContainer.online a.aporteLink').map(function(){
+                    return $(this).attr('href').split('/').pop();
+                }).get();
+
+                _cb(err, links)
+            });
+        },
+        function getRedirectedLinks(links, _cb) {
+            async.map(links,
+            function(linkId, __cb) {
+                var linkUri = util.format(URLs.LINK, linkId);
+                var opts = getOptions('GET', linkUri);
+                request(opts, function (err, response, body) {
+                    if (err)
+                        return __cb(err);
+
+                    if (response.statusCode == 302) // We are not logged in
+                        return __cb(Errors.NOT_LOGGED_IN);
+
+                    body = JSON.parse(body);
+                    var $ = cheerio.load(body.html);
+                    var lns =  $('a.episodeText').map(function(){
+                        return $(this).attr('href').split('/').pop();
+                    }).get();
+
+                    lns = lns.reduce(function(v, c) { return v.concat(c) }, []);
+                    __cb(null, lns);
+                });
+            },
+            _cb);
+        },
+        function getExternalLinks(links, _cb) {
+            links = links.reduce(function(v, c) { return v.concat(c) }, []);
+            async.map(links,
+            function(linkId, __cb) {
+                var linkUri = util.format(URLs.GOTO, linkId);
+                var opts = getOptions('GET', linkUri);
+                for (key in opts.headers)
+                    if (key !== 'User-Agent')
+                        delete opts.headers[key];
+
+                request(opts, function (err, response, body) {
+                    if (err)
+                        return __cb(err);
+                    __cb(null, response.headers.location);
+                });
+            },
+            _cb);
+        }
+    ], cb)
 }
 
 module.exports = {
     login: login,
     search: search,
-    show: show
+    show: show,
+    episode: episode
 }

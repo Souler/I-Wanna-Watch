@@ -16,9 +16,15 @@ async.waterfall([
         pordede.show(shows[0].id, cb);
     },
     function(seasons, cb) {
-        console.log(JSON.stringify(seasons, null, 2));
+        var ep = seasons[1].episodes[6]; // S01xE02
+        pordede.episode(ep.id, cb);
     }
-], console.log);
+], function(err, result) {
+    if (err)
+        console.log(err);
+    else
+        console.log(JSON.stringify(result, null, 2));
+});
 
 
 return;
