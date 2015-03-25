@@ -156,7 +156,26 @@ var episode = function(episodeId, cb) {
                 body = JSON.parse(body);
                 var $ = cheerio.load(body.html);
                 var links = $('div.linksContainer.online a.aporteLink').map(function(){
-                    return $(this).attr('href').split('/').pop();
+                    var epId = $(this).attr('href').split('/').pop();
+                    var subtitles = false;
+                    var lang = 'spanish'; // This site is spanish, so probably it is...
+
+                    var flags = $(this).find('.flag').each(function() {
+                        var l = $(this).attr('class').split(' ').pop();
+                        var content = $(this).html().replace(/\s+|&#xA0;/gi, '').toLowerCase();
+                        if (content.indexOf('sub') >= 0)
+                            subtitles = l;
+                        else if (content.length > 0)
+                            lang = l + '-' + content;
+                        else
+                            lang = l;
+                    });
+
+                    return {
+                        id: epId,
+                        subtitles: subtitles,
+                        language: lang
+                    };
                 }).get();
 
                 _cb(err, links)
@@ -164,8 +183,8 @@ var episode = function(episodeId, cb) {
         },
         function getRedirectedLinks(links, _cb) {
             async.map(links,
-            function(linkId, __cb) {
-                var linkUri = util.format(URLs.LINK, linkId);
+            function(link, __cb) {
+                var linkUri = util.format(URLs.LINK, link.id);
                 var opts = getOptions('GET', linkUri);
                 request(opts, function (err, response, body) {
                     if (err)
@@ -177,7 +196,11 @@ var episode = function(episodeId, cb) {
                     body = JSON.parse(body);
                     var $ = cheerio.load(body.html);
                     var lns =  $('a.episodeText').map(function(){
-                        return $(this).attr('href').split('/').pop();
+                        return {
+                            id: $(this).attr('href').split('/').pop(),
+                            subtitles: link.subtitles,
+                            language: link.language
+                        };
                     }).get();
 
                     lns = lns.reduce(function(v, c) { return v.concat(c) }, []);
@@ -189,8 +212,8 @@ var episode = function(episodeId, cb) {
         function getExternalLinks(links, _cb) {
             links = links.reduce(function(v, c) { return v.concat(c) }, []);
             async.map(links,
-            function(linkId, __cb) {
-                var linkUri = util.format(URLs.GOTO, linkId);
+            function(link, __cb) {
+                var linkUri = util.format(URLs.GOTO, link.id);
                 var opts = getOptions('GET', linkUri);
                 for (key in opts.headers)
                     if (key !== 'User-Agent')
@@ -199,7 +222,14 @@ var episode = function(episodeId, cb) {
                 request(opts, function (err, response, body) {
                     if (err)
                         return __cb(err);
-                    __cb(null, response.headers.location);
+
+                    var result = {
+                        href: response.headers.location,
+                        subtitles: link.subtitles,
+                        language: link.language
+                    };
+
+                    __cb(null, result);
                 });
             },
             _cb);
@@ -210,6 +240,6 @@ var episode = function(episodeId, cb) {
 module.exports = {
     login: login,
     search: search,
-    show: show,
+    tvshow: show,
     episode: episode
 }

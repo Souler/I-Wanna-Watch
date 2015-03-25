@@ -13,7 +13,7 @@ async.waterfall([
         pordede.search('better call saul', cb);
     },
     function(shows, cb) {
-        pordede.show(shows[0].id, cb);
+        pordede.tvshow(shows[0].id, cb);
     },
     function(seasons, cb) {
         var ep = seasons[1].episodes[6]; // S01xE02
