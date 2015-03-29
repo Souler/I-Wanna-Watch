@@ -55,7 +55,11 @@ var login = function(params, cb) {
         if (err)
             return cb(err);
 
-        body = JSON.parse(body);
+        try {
+            body = JSON.parse(body);
+        } catch(e) {}
+
+        var $ = cheerio.load(body.html || body);
         if (body.html.indexOf('flash-success') < 0)
             return cb(Errors.WRONG_LOGIN);
         else
@@ -75,8 +79,11 @@ var search = function(query, cb) {
         if (response.statusCode == 302) // We are not logged in
             return cb(Errors.NOT_LOGGED_IN);
 
-        var parsed = JSON.parse(body);
-        var $ = cheerio.load(parsed.html);
+            try {
+                body = JSON.parse(body);
+            } catch(e) {}
+
+            var $ = cheerio.load(body.html || body);
         var shows = $('div[data-model="serie"]').map(function() {
             var $this = $(this);
             var title = $this.find('span.title').html();
@@ -107,8 +114,11 @@ var show = function(showId, cb) {
         if (response.statusCode == 302) // We are not logged in
             return cb(Errors.NOT_LOGGED_IN);
 
-        body = JSON.parse(body);
-        var $ = cheerio.load(body.html);
+        try {
+            body = JSON.parse(body);
+        } catch(e) {}
+
+        var $ = cheerio.load(body.html || body);
         var seasons = $('div.episodes').map(function() {
             var $this = $(this);
             var season = $this.find('div.checkSeason').children().first()[0].prev.data; // BLACK MAGIC!
@@ -153,8 +163,11 @@ var episode = function(episodeId, cb) {
                 if (response.statusCode == 302) // We are not logged in
                     return _cb(Errors.NOT_LOGGED_IN);
 
-                body = JSON.parse(body);
-                var $ = cheerio.load(body.html);
+                try {
+                    body = JSON.parse(body);
+                } catch(e) {}
+
+                var $ = cheerio.load(body.html || body);
                 var links = $('div.linksContainer.online a.aporteLink').map(function(){
                     var epId = $(this).attr('href').split('/').pop();
                     var subtitles = false;
@@ -193,8 +206,11 @@ var episode = function(episodeId, cb) {
                     if (response.statusCode == 302) // We are not logged in
                         return __cb(Errors.NOT_LOGGED_IN);
 
-                    body = JSON.parse(body);
-                    var $ = cheerio.load(body.html);
+                    try {
+                        body = JSON.parse(body);
+                    } catch(e) {}
+
+                    var $ = cheerio.load(body.html || body);
                     var lns =  $('a.episodeText').map(function(){
                         return {
                             id: $(this).attr('href').split('/').pop(),
