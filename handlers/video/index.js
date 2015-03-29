@@ -57,7 +57,15 @@ var handle = function(uri, cb) {
         return cb(util.format(Errors.NOT_HANDLER_FOR, hostname));
 }
 
+var canHandle = function(uri) {
+    var parsedUri = url.parse(uri);
+    var hostname = parsedUri.host;
+    var handler = handlers[parsedUri.host];
+    return !!handler;
+}
+
 module.exports = {
     init: init,
-    handle: handle
+    handle: handle,
+    canHandle: canHandle
 }
