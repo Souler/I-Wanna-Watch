@@ -15,7 +15,8 @@ var cheerio = require('cheerio');
 var async = require('async');
 
 var handles = [
-    'vidspot.net'
+    'vidspot.net',
+    'allmyvideos.net'
 ];
 
 var handler = function(uri, _cb) {
