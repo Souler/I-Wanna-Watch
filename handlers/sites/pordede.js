@@ -51,20 +51,28 @@ var login = function(params, cb) {
         'popup': '1',
     };
 
-    request(options, function (err, response, body) {
-        if (err)
-            return cb(err);
+    async.series([
+        function (_cb) {
+            var cfprot = require('./helpers/cloudflare-ddos');
+            cfprot(URLs.HOME, options.jar, _cb);
+        },
+        function (_cb) {
+            request(options, function (err, response, body) {
+                if (err)
+                    return _cb(err);
 
-        try {
-            body = JSON.parse(body);
-        } catch(e) {}
+                try {
+                    body = JSON.parse(body);
+                } catch(e) {}
 
-        var $ = cheerio.load(body.html || body);
-        if (body.html.indexOf('flash-success') < 0)
-            return cb(Errors.WRONG_LOGIN);
-        else
-            cb();
-    });
+                var $ = cheerio.load(body.html || body);
+                if (body.html.indexOf('flash-success') < 0)
+                    return _cb(Errors.WRONG_LOGIN);
+                else
+                    _cb();
+            });
+        }
+    ], cb)
 }
 
 var search = function(query, cb) {
