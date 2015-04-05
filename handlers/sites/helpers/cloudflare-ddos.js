@@ -1,7 +1,6 @@
 var url = require('url');
 var util = require('util');
 var querystring = require('querystring');
-var request = require('request');
 var cheerio = require('cheerio');
 var async = require('async');
 
@@ -9,14 +8,12 @@ var async = require('async');
   Once `cb` is called, `jar` will contain the cookies necesary for accessing 
   the given `uri` without passing by the cloudflare ddos protection
 */
-var resolve = function(uri, jar, cb) {
+var resolve = function(uri, cb) {
 
     var opts = {
         method: 'GET',
         uri: uri,
-        jar: jar,
         headers: {
-            'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:34.0) Gecko/20100101 Firefox/34.0",
             'Referer': uri,
         },
         followRedirect: false
@@ -36,13 +33,15 @@ var resolve = function(uri, jar, cb) {
         if (err)
             throw new Error(err);
 
+        if (body.indexOf('DDoS protection by CloudFlare') < 0)
+            return cb();
+
         var $ = cheerio.load(body);
         var form = $('form#challenge-form');
         var formContents = form.serializeArray();
         formContents.push({ name: 'jschl-answer' });
 
         var jsToEval = $('script').html();
-
         // Preapare enviroment
         var document = {};
         document.attachEvent = function(evt, fn) {

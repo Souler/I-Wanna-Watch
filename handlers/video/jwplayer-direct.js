@@ -10,7 +10,6 @@
     On the HTML response to that POST there will be a script tag containing a jwConfig with
     the real video soruce uri we are looking for.
 */
-var request = require('request');
 var cheerio = require('cheerio');
 var async = require('async');
 
@@ -23,10 +22,7 @@ var handler = function(uri, _cb) {
 
     var options = {
         method: 'GET',
-        uri: uri,
-        headers: {
-            'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:34.0) Gecko/20100101 Firefox/34.0"
-        }
+        uri: uri
     }
 
     async.series({

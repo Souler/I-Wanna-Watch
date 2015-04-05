@@ -1,7 +1,6 @@
 var url = require('url');
 var util = require('util');
 var querystring = require('querystring');
-var request = require('request');
 var cheerio = require('cheerio');
 var async = require('async');
 
@@ -25,18 +24,14 @@ var Errors = {
 }
 
 var headers = {
-    'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:34.0) Gecko/20100101 Firefox/34.0",
     'X-Requested-With': 'XMLHttpRequest',
     'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
 };
-
-var jar = request.jar();
 
 var getOptions = function(method, uri) {
     return {
         method: method.toUpperCase(),
         uri: uri,
-        jar: jar,
         headers: headers,
         followRedirect: false
     };
@@ -54,7 +49,7 @@ var login = function(params, cb) {
     async.series([
         function (_cb) {
             var cfprot = require('./helpers/cloudflare-ddos');
-            cfprot(URLs.HOME, options.jar, _cb);
+            cfprot(URLs.HOME, _cb);
         },
         function (_cb) {
             request(options, function (err, response, body) {
@@ -262,6 +257,7 @@ var episode = function(episodeId, cb) {
 }
 
 module.exports = {
+    handles: handles,
     login: login,
     search: search,
     tvshow: show,

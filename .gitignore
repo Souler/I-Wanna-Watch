@@ -29,3 +29,4 @@ node_modules
 
 # User config
 config.js
+.cookies.json
