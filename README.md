@@ -8,6 +8,7 @@
 ## Video sites currently supported
 * allmyvideos.net
 * vidspot.net
+* www.nowvideo.sx
 
 ## Video sites that will be supported
 * streamin.to
@@ -17,6 +18,5 @@
 * www.gamovideo.com
 * netu.tv
 * videomega.tv
-* www.nowvideo.sx
 * played.to
 * www.videoweed.es
