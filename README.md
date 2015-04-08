@@ -4,6 +4,8 @@
 * pordede.com
 
 ## Content sites that will be supported
+* seriesflv.net
+* hdfull.tv
 
 ## Video sites currently supported
 * allmyvideos.net
