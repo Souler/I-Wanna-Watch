@@ -27,6 +27,7 @@ Async function which returns through the `cb` function an error if anything went
 {
     id: 'some-show', // site internal id, usable later by tvshow function
     title: 'Some Show',
+    year: 2014,
     thumbnail: null // this might be null or a full URL
 }
 ```

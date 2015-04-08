@@ -16,6 +16,7 @@
     "glob": "~5.0.3",
     "request-progress": "~0.3.1",
     "tough-cookie-filestore": "0.0.1",
-    "touch": "0.0.3"
+    "touch": "0.0.3",
+    "underscore": "~1.8.3"
   }
 }
