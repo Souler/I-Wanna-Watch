@@ -9,7 +9,7 @@ var handles = [
 ];
 
 var URLs = {
-    HOME: 'http://www.pordede.com',
+    HOME: 'http://www.pordede.com/index.php',
     LOGIN: 'http://www.pordede.com/site/login',
     SEARCH: 'http://www.pordede.com/series/search/query/%s/on/title/showlist/all',
     TV_SHOW: 'http://www.pordede.com/serie/%s',
@@ -61,7 +61,7 @@ var login = function(params, cb) {
                 } catch(e) {}
 
                 var $ = cheerio.load(body.html || body);
-                if (body.html.indexOf('flash-success') < 0)
+                if ((body.html || body).indexOf('flash-success') < 0)
                     return _cb(Errors.WRONG_LOGIN);
                 else
                     _cb();
@@ -82,14 +82,15 @@ var search = function(query, cb) {
         if (response.statusCode == 302) // We are not logged in
             return cb(Errors.NOT_LOGGED_IN);
 
-            try {
-                body = JSON.parse(body);
-            } catch(e) {}
+        try {
+            body = JSON.parse(body);
+        } catch(e) {}
 
-            var $ = cheerio.load(body.html || body);
+        var $ = cheerio.load(body.html || body);
         var shows = $('div[data-model="serie"]').map(function() {
             var $this = $(this);
             var title = $this.find('span.title').html();
+            var year = Number($this.find('span.year').html());
             var link = $this.find('a.defaultLink').attr('href');
             var thumbnail = $this.find('div.coverMini img.centeredPic').attr('src');
 
@@ -97,6 +98,7 @@ var search = function(query, cb) {
             return {
                 id: id,
                 title: title,
+                year: year,
                 thumbnail: thumbnail
             };
         }).get();
@@ -130,9 +132,13 @@ var show = function(showId, cb) {
             episodes = episodes.map(function() {
                 var $episode = $(this);
                 var episodeId = $episode.attr('data-id');
-                var numberDOM = $episode.find('div.info span.title span.number');
-                var number = Number(numberDOM.html());
-                var title = numberDOM[0].next.data;
+                var titleDOM = $episode.find('div.info span.title');
+                var title = $(titleDOM).clone()
+                                        .children()
+                                        .remove()
+                                        .end()
+                                        .text();
+                var number = Number($(titleDOM).find('span.number').html());
 
                 return {
                     id: episodeId,
