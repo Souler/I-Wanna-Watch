@@ -22,6 +22,21 @@ global.request = request.defaults({
     }
 });
 
+var hdfull = require('./handlers/sites/hdfull');
+
+hdfull.search('better', function(err, result) {
+    if (err)
+        console.log(err.stack || err);
+    console.log(result);
+
+    hdfull.tvshow(result[0].id, function(err, result) {
+        if (err)
+            console.log(err.stack || err);
+        console.log(result);
+    })
+});
+
+return;
 // var canonize = function(showname, episodename, season, chapter) {
 //     var s = [showname, episodename].map(function(e) {
 //         return e.toLowerCase()
