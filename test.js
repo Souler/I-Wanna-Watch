@@ -32,7 +32,13 @@ hdfull.search('better', function(err, result) {
     hdfull.tvshow(result[0].id, function(err, result) {
         if (err)
             console.log(err.stack || err);
-        console.log(result);
+        console.log(JSON.stringify(result, null, 2));
+
+        hdfull.episode(result[1].episodes[0].id, function(err, result) {
+            if (err)
+                console.log(err.stack || err);
+            console.log(JSON.stringify(result, null, 2));
+        });
     })
 });
 
