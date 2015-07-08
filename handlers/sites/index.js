@@ -28,6 +28,9 @@ var init = function(cb) {
 
             var r = require(filename);
 
+            if (r.disabled == true)
+                continue;
+
             // Error handling. Should not happen if guidelines are followed...
             if (!r.handles)
                 return cb(util.format(Errors.HANDLES_NOT_DEFINED, filename));
@@ -64,7 +67,7 @@ var getHandler = function(uri) {
     if (handler)
         return handler;
     else
-        throw new Error(util.format(Errors.NOT_HANDLER_FOR, uri));
+        throw new NoSiteHandlerError(uri);
 }
 
 var canHandle = function(uri) {
