@@ -22,7 +22,7 @@ Async function which returns through the `cb` function an error if anything went
 
 <a name="search" />
 ## search(query, cb)
-Async function which returns through the `cb` function an error if anything went wrong during the process or an `Array` of `Object` representing all the the shows that matched the given `query` in that site. Each show `Object` needs to be as follows.
+Async function which returns through the `cb` function an error if anything went wrong during the process or a `Collection` representing all the the shows that matched the given `query` in that site. Each show `Object` needs to be as follows.
 ```javascript
 {
     id: 'some-show', // site internal id, usable later by tvshow function
@@ -34,7 +34,7 @@ Async function which returns through the `cb` function an error if anything went
 
 <a name="tvshow" />
 ## tvshow(id, cb)
-Async function which returns through the `cb` function an error if anything went wrong during the process or an `Array` of `Object` representing all seasons of the show identified by `id` available at that site. Also, each season `Object` contains its name and an `Array` of available episodes. Each season `Object` needs to be as follows.
+Async function which returns through the `cb` function an error if anything went wrong during the process or a `Collection` representing all seasons of the show identified by `id` available at that site. Also, each season `Object` contains its name and an `Array` of available episodes. Each season `Object` needs to be as follows.
 ```javascript
 {
     name: 'Season 1',
@@ -51,7 +51,7 @@ Async function which returns through the `cb` function an error if anything went
 
 <a name="episode" />
 ## episode(id, cb)
-Async function which returns through the `cb` function an error if anything went wrong during the process or an `Array` of `Object` representing all the external links for the episode identified by `id`. Each external link `Object` needs to be as follows.
+Async function which returns through the `cb` function an error if anything went wrong during the process or a `Collection` representing all the external links for the episode identified by `id`. Each external link `Object` needs to be as follows.
 ```javascript
 {
     href: 'http://some.video.hosting.com/qsdfvg1', // full url of external video hosting service
