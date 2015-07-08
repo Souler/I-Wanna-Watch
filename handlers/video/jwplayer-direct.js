@@ -15,6 +15,7 @@ var async = require('async');
 
 var handles = [
     'vidspot.net',
+    // 'streamin.to',
     'allmyvideos.net'
 ];
 
@@ -33,14 +34,30 @@ var handler = function(uri, _cb) {
 
                 var $ = cheerio.load(body);
 
-                var formData = {};
-                var formContents = $('form[name=F1]').serializeArray();
-                formContents.forEach(function(e) {
-                    formData[e.name] = e.value;
-                });
+                var err = $('b.err');
+                if (err.length > 0)
+                    return cb(new VideoSiteFileError(options.uri, err.text()));
+                    
+                if (body.indexOf('File Deleted.') >= 0)
+                    return cb(new VideoSiteFileError(options.uri, 'File Deleted.'));
 
-                options.formData = formData;
-                cb();
+                var form = $('form[method=POST]');
+                if (form.length <= 0)
+                    return cb(new NotExpectedStructureError(options.uri));
+
+                options.formData = {};
+                var formContents = form.serializeArray();
+                formContents.forEach(function(e) {
+                    options.formData[e.name] = e.value;
+                });
+                options.formData['imhuman'] = '+';
+
+                var waitTimer = 0;
+                var timer = $('#cxc');
+                if (timer.length > 0)
+                    waitTimer = Number(timer.text()) + 1;
+
+                setTimeout(function() { cb() }, waitTimer * 1000);
             });
         },
         post: function(cb) {
@@ -77,7 +94,7 @@ var handler = function(uri, _cb) {
                 var conf = eval($(elem).html());
 
                 // Select the highest quality source
-                var source = conf.playlist[0].sources.reduce(function(v, c) {
+                    var source = conf.playlist[0].sources.reduce(function(v, c) {
                     if (v == undefined)
                         return c;
                     if (Number(c.label) > Number(v.label))
