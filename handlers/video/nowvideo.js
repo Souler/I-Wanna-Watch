@@ -1,14 +1,7 @@
 /**
-    VIDSPOT Handler
+    NOWVIDEO Handler
 
-    Given an url to a video: VIDEO_URL.
-    We perform a get to VIDEO_URL  wich return an HTML body. Inside
-    that body there is a form with hidden fields (basically the "Continue to Video" button
-    we see when opening the web on a client).
-    After exctracting that hidden fields from the form we perform a POST to the same VIDEO_URL
-    with the before mentioned form data.
-    On the HTML response to that POST there will be a script tag containing a jwConfig with
-    the real video soruce uri we are looking for.
+    Given an url to a video: VIDEO_URL. TODO
 */
 var util = require('util');
 var querystring = require('querystring');
@@ -21,6 +14,9 @@ var handles = [
 ];
 
 var handler = function(uri, _cb) {
+
+    if (!_cb || !(_cb instanceof Function))
+        throw new Error('No callback specified');
 
     var options = {
         method: 'GET',

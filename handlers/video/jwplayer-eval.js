@@ -14,11 +14,13 @@ var cheerio = require('cheerio');
 var async = require('async');
 
 var handles = [
-    'powvideo.net',
     'rocvideo.tv'
 ];
 
 var handler = function(uri, _cb) {
+
+    if (!_cb || !(_cb instanceof Function))
+        throw new Error('No callback specified');
 
     var options = {
         method: 'GET',

@@ -21,6 +21,9 @@ var handles = [
 
 var handler = function(uri, _cb) {
 
+    if (!_cb || !(_cb instanceof Function))
+        throw new Error('No callback specified');
+
     var options = {
         method: 'GET',
         uri: uri

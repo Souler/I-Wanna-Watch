@@ -14,12 +14,16 @@ var cheerio = require('cheerio');
 var async = require('async');
 
 var handles = [
-    'vidspot.net',
-    // 'streamin.to',
+    // 'vidspot.net',
+    'streamcloud.eu',
+    'streamin.to',
     'allmyvideos.net'
 ];
 
 var handler = function(uri, _cb) {
+
+    if (!_cb || !(_cb instanceof Function))
+        throw new Error('No callback specified');
 
     var options = {
         method: 'GET',
@@ -57,6 +61,10 @@ var handler = function(uri, _cb) {
                 if (timer.length > 0)
                     waitTimer = Number(timer.text()) + 1;
 
+                var rgxCount = /var count = ([0-9]+)/;
+                if (rgxCount.test(body))
+                    waitTimer = Number(rgxCount.exec(body)[1]);
+
                 setTimeout(function() { cb() }, waitTimer * 1000);
             });
         },
@@ -68,10 +76,13 @@ var handler = function(uri, _cb) {
 
                 var $ = cheerio.load(body);
                 var elems = $('script').filter(function() {
-                    return $(this).html().indexOf('jwConfig') >= 0;
+                    return $(this).html().indexOf('jwplayer(') >= 0;
                 });
-                var elem = elems[0];
 
+                if (elems.length <= 0)
+                    return cb(new NotExpectedStructureError(options.uri));
+
+                var elem = elems[0];
                 /*
                     Now here we do a little magic. Instead of parsing the js code with regex
                     we create dummy functions and then eval the code, in order to get
@@ -80,10 +91,38 @@ var handler = function(uri, _cb) {
                 // jwplayer('flvplayer').setup(jwConfig({/* theese are our options*/});
                 var jwplayer = function(player) {
                     var dummy = {};
-                    dummy.setup = function(config) {
-                        return config;
+                    dummy.setup = function(conf) { // This is where we get our config (and our video uris)
+                        // Sometimes file is drectly passed in the config instead of in a playlist
+                        if (conf.file)
+                            return cb(null,conf.file);
+
+                        // Select the highest quality source
+                        var source = conf.playlist[0].sources.reduce(function(v, c) {
+                            if (v == undefined)
+                                return c;
+                            if (Number(c.label) > Number(v.label))
+                                return c;
+                            else
+                                return v;
+                        });
+
+                        cb(null, source.file);
+
+                        return conf;
                     }
+
+                    dummy.onBeforePlay = function() { return dummy }
+                    dummy.onPlay = function() { return dummy }
+                    dummy.onReady = function() { return dummy }
+                    dummy.onTime = function() { return dummy }
+                    dummy.onSeek = function() { return dummy }
+                    dummy.onComplete = function() { return dummy }
+
                     return dummy;
+                }
+
+                var jQuery = function() {
+                    return {};
                 }
 
                 var jwConfig = function(config) {
@@ -91,19 +130,8 @@ var handler = function(uri, _cb) {
                 }
 
                 // Now here we have the config
-                var conf = eval($(elem).html());
+                eval($(elem).html());
 
-                // Select the highest quality source
-                    var source = conf.playlist[0].sources.reduce(function(v, c) {
-                    if (v == undefined)
-                        return c;
-                    if (Number(c.label) > Number(v.label))
-                        return c;
-                    else
-                        return v;
-                });
-
-                cb(null, source.file);
             });
         }
     }, function(err, result) {
