@@ -17,6 +17,7 @@
     "request-progress": "~0.3.1",
     "tough-cookie-filestore": "0.0.1",
     "touch": "0.0.3",
-    "underscore": "~1.8.3"
+    "underscore": "~1.8.3",
+    "zpad": "~0.5.0"
   }
 }
