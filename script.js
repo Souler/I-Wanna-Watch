@@ -73,6 +73,7 @@ var search_show = function(_cb) {
 	});
 
 	var contentSite = require('./handlers/sites/hdfull');
+	var tvshowName = null;
 	console.info("Insert your tv show search below")
 	rl.question("> ", function(query) {
 		async.waterfall([
@@ -86,6 +87,7 @@ var search_show = function(_cb) {
 				if (search.length == 1) {
 					var show = search[0];
 					console.info("Found only one result. Using %s", show.title);
+					tvshowName = show.title;
 					return contentSite.tvshow(show.id, cb);
 				}
 
@@ -106,6 +108,7 @@ var search_show = function(_cb) {
 
 						var show = search[n-1];
 						console.info("Selected %d - %s.", n, show.title);
+						tvshowName = show.title;
 						contentSite.tvshow(show.id, cb);
 					})
 				}
@@ -120,13 +123,13 @@ var search_show = function(_cb) {
 					console.info("%s has %d episodes.", season.name, season.episodes.length);
 					season.episodes.forEach(function(episode) {
 						episode.links = [];
-						var episodeHash = util.format("%sx%s_%s", zpad(n_season, 2), zpad(episode.number), episode.title.replace(/\s+/g, '_'));
+						episode.hash = util.format("%s_%sx%s",  episode.title.replace(/\s+/g, '_'), zpad(n_season, 2), zpad(episode.number));
 						var fn = function(_cb) {
 							contentSite.episode(episode.id, function(err, links) {
 								if (err)
 									return _cb(err);
 								episode.links = links;
-								console.info('Found %d links for episode %s', links.length, episodeHash);
+								console.info('Found %d links for episode %s', links.length, episode.hash);
 								return _cb();
 							})
 						}
@@ -141,10 +144,153 @@ var search_show = function(_cb) {
 						return cb(null, seasons);
 				})
 			},
+			function (seasons, cb) { // Select prefered language
+				var langs = {};
+				seasons.forEach(function(season) {
+					season.episodes.forEach(function(episode) {
+						episode.links.forEach(function(link) {
+							if (langs[link.lang])
+								langs[link.lang] += 1;
+							else
+								langs[link.lang] = 1;
+						});
+					});
+				});
+
+				var askChoice = function() {
+					console.info('Select the prefered language for the show:')
+					Object.keys(langs).forEach(function(lang, idx) {
+						console.info('%d. %s (%d links)', idx+1, lang, langs[lang]);
+					})
+
+					rl.question("> ", function(pick) {
+						var n = Number(pick);
+						if (isNaN(n) || n < 1 || n > Object.keys(langs).length + 1) {
+							console.info("Wrong choice. Please, write a valid number from the list");
+							return askChoice();
+						}
+
+						var lang = Object.keys(langs)[n-1];
+						console.info("Selected %s.", lang);
+
+						seasons.forEach(function(season) {
+							season.episodes.forEach(function(episode) {
+								episode.links = episode.links.filter(function(link) {
+									return link.lang == lang;
+								})
+							})
+						});
+
+						cb(null, seasons);
+					})
+				}
+
+				askChoice();
+			},
+			function (seasons, cb) { // Select subtitles choice
+				var subs = {};
+				seasons.forEach(function(season) {
+					season.episodes.forEach(function(episode) {
+						episode.links.forEach(function(link) {
+							var s = link.subtitles === false ? 'No subtitles' : link.subtitles;
+							if (subs[s])
+								subs[s] += 1;
+							else
+								subs[s] = 1;
+						});
+					});
+				});
+
+				var askChoice = function() {
+					console.info('Select the subtitles for the show:')
+					Object.keys(subs).forEach(function(sub, idx) {
+						console.info('%d. %s (%d links)', idx+1, sub, subs[sub]);
+					})
+
+					rl.question("> ", function(pick) {
+						var n = Number(pick);
+						if (isNaN(n) || n < 1 || n > Object.keys(subs).length + 1) {
+							console.info("Wrong choice. Please, write a valid number from the list");
+							return askChoice();
+						}
+
+						var sub = Object.keys(subs)[n-1];
+						console.info("Selected %s.", sub);
+
+						seasons.forEach(function(season) {
+							season.episodes.forEach(function(episode) {
+								episode.links = episode.links.filter(function(link) {
+									return link.subtitles == sub;
+								})
+							})
+						});
+
+						cb(null, seasons);
+					})
+				}
+
+				askChoice();
+			},
+			function (seasons, cb) {
+				var episodes = [];
+				seasons.forEach(function(season) {
+					season.episodes.forEach(function(episode) {
+						episode.links = episode.links.filter(function(link) {
+							return videoSites.canHandle(link.href);
+						});
+						if (episode.links.length > 0)
+							episodes.push(episode);
+						else
+							console.error('%s has no links that I can handle!', episode.hash);
+					});
+				});
+
+				async.each(
+					episodes,
+					function (episode, _cb) {
+						async.detectSeries(
+							episode.links,
+							function (link, __cb) {
+								videoSites.handle(link.href, function (err, video_uri) {
+									var isOk = !!(!err && video_uri);
+									if (isOk)
+										episode.video_uri = video_uri;
+									return __cb(isOk);
+								})
+							},
+							function (err) {
+								_cb(null);
+							}
+						)
+					},
+					function (err) {
+						if (err)
+							return cb(err);
+						else
+							return cb(null, seasons);
+					}
+				)
+			},
+			function (seasons, cb) {
+				console.info('Generating show directory structure');
+				var showDir = path.join(__dirname, tvshowName);
+				if (!fs.existsSync(showDir))
+					fs.mkdirSync(showDir);
+				seasons.forEach(function(season) {
+					var seasonDir = path.join(showDir, season.name);
+					if (!fs.existsSync(seasonDir))
+						fs.mkdirSync(seasonDir);
+					season.episodes.forEach(function(episode) {
+						var episodeFile = path.join(seasonDir, episode.hash + '.strm');
+						fs.writeFileSync(episodeFile, episode.video_uri);
+					});
+				});
+			},
 			function (seasons, cb) {
 				var links = [];
 				seasons.forEach(function(season) {
 					season.episodes.forEach(function(episode) {
+						console.log(episode);
 						episode.links.forEach(function(link) {
 							links.push(link);
 						});
