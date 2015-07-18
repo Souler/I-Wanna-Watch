@@ -37,7 +37,7 @@ Async function which returns through the `cb` function an error if anything went
 Async function which returns through the `cb` function an error if anything went wrong during the process or a `Collection` representing all seasons of the show identified by `id` available at that site. Also, each season `Object` contains its name and an `Array` of available episodes. Each season `Object` needs to be as follows.
 ```javascript
 {
-    name: 'Season 1',
+    number: 1, // Number of the season
     episodes: [
     	{
     		id: '0u78123sa', // site internal id, usable later by episode function

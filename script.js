@@ -119,11 +119,11 @@ var search_show = function(_cb) {
 				var fns = [];
 
 				console.info("Found %d seasons for this show.", seasons.length);
-				seasons.forEach(function(season, n_season) {
-					console.info("%s has %d episodes.", season.name, season.episodes.length);
+				seasons.forEach(function(season) {
+					console.info("Season %d has %d episodes.", season.number, season.episodes.length);
 					season.episodes.forEach(function(episode) {
 						episode.links = [];
-						episode.hash = util.format("%s_s%se%s",  episode.title.replace(/\s+/g, '_'), zpad(n_season, 2), zpad(episode.number));
+						episode.hash = util.format("%s_s%se%s",  episode.title.replace(/\s+/g, '_'), zpad(season.number, 2), zpad(episode.number));
 						var fn = function(_cb) {
 							contentSite.episode(episode.id, function(err, links) {
 								if (err)
@@ -276,8 +276,9 @@ var search_show = function(_cb) {
 				var showDir = path.join(__dirname, tvshowName);
 				if (!fs.existsSync(showDir))
 					fs.mkdirSync(showDir);
+
 				seasons.forEach(function(season) {
-					var seasonDir = path.join(showDir, season.name);
+					var seasonDir = path.join(showDir, 'Season ' + season.number);
 					if (!fs.existsSync(seasonDir))
 						fs.mkdirSync(seasonDir);
 					season.episodes.forEach(function(episode) {
@@ -285,52 +286,16 @@ var search_show = function(_cb) {
 						fs.writeFileSync(episodeFile, episode.video_uri);
 					});
 				});
-			},
-			function (seasons, cb) {
-				var links = [];
-				seasons.forEach(function(season) {
-					season.episodes.forEach(function(episode) {
-						console.log(episode);
-						episode.links.forEach(function(link) {
-							links.push(link);
-						});
-					});
-				});
-				var url = require('url');
-				links.forEach(function(ln) {
-					var up = url.parse(ln.href);
-					ln.host = up.host;
-				})
-				var a = _.groupBy(links, 'host');
-				var sites = Object.keys(a);
-				sites = sites.map(function(site) {
-					return {
-						site: site,
-						count: a[site].length
-					}
-				});
-				sites = sites.sort(function(a, b) { return b.count - a.count});
-				console.log(sites);
-				fs.writeFileSync('out.json', JSON.stringify(a, null, 4));
-				return;
-				async.each(links, function(link, cb) {
-					if (!videoSites.canHandle(link.href))
-						return cb();
-					videoSites.handle(link.href, function(err, videoUri) {
-						link.video = videoUri;
-						cb();
-					})
-				});
+				
+				cb();
 			}
 		], function(err, result) {
 			if (err) {
 				console.log(err.stack);
 				console.log(err);
+				return process.exit(1);
 			}
-			console.log(result);
-			fs.writeFileSync(query+'.json', JSON.stringify(result, null, 2));
-			rl.close();
-			_cb();
+			process.exit(0);
 		});
 
 	});	

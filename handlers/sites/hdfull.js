@@ -151,9 +151,8 @@ var tvshow = function(showId, cb) {
             .sort(function(a, b) { return a - b; })
             .map(function(seasonId) {
                 var seasonEpisodes = seasonsEpisodes[seasonId].sort(function(a, b) { return a.number - b.number; });
-                var name = seasonId == 0 ? 'Especiales' : 'Temporada ' + seasonId;
                 return {
-                    name: name,
+                    number: seasonId,
                     episodes: seasonEpisodes
                 }
             })
