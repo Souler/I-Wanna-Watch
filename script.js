@@ -123,7 +123,7 @@ var search_show = function(_cb) {
 					console.info("%s has %d episodes.", season.name, season.episodes.length);
 					season.episodes.forEach(function(episode) {
 						episode.links = [];
-						episode.hash = util.format("%s_%sx%s",  episode.title.replace(/\s+/g, '_'), zpad(n_season, 2), zpad(episode.number));
+						episode.hash = util.format("%s_s%se%s",  episode.title.replace(/\s+/g, '_'), zpad(n_season, 2), zpad(episode.number));
 						var fn = function(_cb) {
 							contentSite.episode(episode.id, function(err, links) {
 								if (err)
