@@ -3,11 +3,8 @@ var util = require('util');
 var path = require('path');
 var readline = require('readline');
 var zpad = require('zpad');
-var touch = require('touch');
 var async = require('async');
-var request = require('request');
 var _ = require('underscore');
-var FileCookieStore = require('tough-cookie-filestore');
 
 var errors = require(path.join(__dirname, './errors')); 
 var contentSites = require(path.join(__dirname, './handlers/sites')); 
