@@ -245,7 +245,7 @@ var search_show = function(_cb) {
 				async.each(
 					episodes,
 					function (episode, _cb) {
-						async.detectSeries(
+						async.detect(
 							episode.links,
 							function (link, __cb) {
 								videoSites.handle(link.href, function (err, video_uri) {
