@@ -29,4 +29,7 @@ node_modules
 
 # User config
 config.js
-.cookies.json
+.cookies-iww.json
+
+# Generated STRM files
+*.strm
