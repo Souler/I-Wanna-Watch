@@ -13,7 +13,7 @@
     "cheerio": "~0.19.0",
     "express": "^4.13.3",
     "glob": "~5.0.14",
-    "request": "~2.53.0",
+    "request": "~2.84.0",
     "request-progress": "~0.3.1",
     "request-promise": "~0.4.1",
     "string-capitalize": "~1.0.1",
